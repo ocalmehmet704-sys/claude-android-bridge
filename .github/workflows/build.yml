@@ -16,25 +16,20 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "platform-tools" "platforms;android-33" "build-tools;33.0.2" 2>/dev/null || true
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
 
       - name: Build APK
-        run: ./gradlew assembleRelease
-
-      - name: Sign APK
-        run: |
-          # Debug imzasıyla imzala (test için)
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
-            --ks $ANDROID_HOME/debug.keystore \
-            --ks-pass pass:android \
-            --key-alias androiddebugkey \
-            --key-pass pass:android \
-            app/build/outputs/apk/release/app-release-unsigned.apk || true
-          cp app/build/outputs/apk/release/app-release-unsigned.apk claude-bridge.apk
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: claude-bridge
-          path: claude-bridge.apk
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
           retention-days: 7
