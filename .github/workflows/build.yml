@@ -1,0 +1,40 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build APK
+        run: ./gradlew assembleRelease
+
+      - name: Sign APK
+        run: |
+          # Debug imzasıyla imzala (test için)
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+            --ks $ANDROID_HOME/debug.keystore \
+            --ks-pass pass:android \
+            --key-alias androiddebugkey \
+            --key-pass pass:android \
+            app/build/outputs/apk/release/app-release-unsigned.apk || true
+          cp app/build/outputs/apk/release/app-release-unsigned.apk claude-bridge.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-bridge
+          path: claude-bridge.apk
+          retention-days: 7
