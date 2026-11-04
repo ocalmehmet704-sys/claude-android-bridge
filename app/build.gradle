@@ -4,6 +4,7 @@ plugins {
 
 android {
     compileSdk 33
+    namespace "com.claude.bridge"
     defaultConfig {
         applicationId "com.claude.bridge"
         minSdk 24
